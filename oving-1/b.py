@@ -51,7 +51,6 @@ print("W = %s, b = %s, loss = %s" % (model.W, model.b, model.loss(x_train, y_tra
 fig = plt.figure("Age of babies based on length and weight")
 ax = fig.add_subplot(projection="3d")
 
-x_train.sort()
 length = x_train[:, 0].squeeze()
 width = x_train[:, 1].squeeze()
 days = y_train[:, 0].squeeze()
