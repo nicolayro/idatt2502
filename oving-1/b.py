@@ -6,8 +6,7 @@ import matplotlib.pyplot as plt
 x = []
 y = []
 with open("./day_length_weight.csv", 'r') as file:
-    reader = csv.reader(file)
-    next(reader) # Skip first line
+    reader = csv.reader(file) next(reader) # Skip first line
     for row in reader:
         y.append(float(row[0]))
         x.append([float(row[1]), float(row[2])])
@@ -66,7 +65,7 @@ z = torch.empty((step, step), dtype=torch.long) # Initialize z values
 
 # Calculate z values based on x and y
 for i, t1 in enumerate(x):
-    for j, t2 in enumerate(y):
+   for j, t2 in enumerate(y):
         tensor = torch.tensor([t1, t2])
         z[i, j] = model.f(tensor).detach()
 
