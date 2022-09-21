@@ -1,0 +1,8 @@
+- Visualize/analyze UCI Mushrooms dataset
+    - Used to determine whether a mushroom is edible
+    - Scatter plots
+    - Distributions
+    - Visualize feature space (like in the example)
+    - Convert categorical data to numerical (get_dummies())
+
+
