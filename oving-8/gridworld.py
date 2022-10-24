@@ -12,26 +12,13 @@ import pygame
 #   0: x position
 #   1: y position
 class Gridworld:
-    # Pygame
-    WHITE = (255, 255, 255)
-    BLACK = (0,0,0)
-    RED = (200,0,0)
-    BLUE = (0, 0, 255)
-    GREEN = (0, 255, 0)
-    PURPLE = (255, 0, 255)
-    BROWN  = (0, 255, 255)
-    TILE_SIZE = 40 
-
-
+ 
     def __init__(self, x, y):
         self.observation_space = np.array([x, y])
         self.action_space = np.array([0, 1, 2, 3]) 
         self.agent_position = [0, 0]
         self.reward_position = [x - 1, y-1]
 
-        self.init_pygame()
-
-   
     def step(self, action):
         reward = 0
         terminated = False
@@ -77,60 +64,27 @@ class Gridworld:
         print(f"invalid action: {action}")
         return [0, 0]
 
-    def reset(self):
+    def reset(self, random = False):
         # Move agent to start position
-        self.agent_position = [0, 0]
+        if not random: 
+            self.agent_position = [0, 0]
+            return self.agent_position
+
+        x = np.random.randint(0, self.observation_space[0])
+        y = np.random.randint(0, self.observation_space[1])
+        self.agent_position = [x, y]
         return self.agent_position
+
 
     def sample(self):
         random_action = np.random.randint(0, 4)
         return self.action_space[random_action]
-
-    def init_pygame(self):
-        # pygame
-        pygame.init()
-        w = 640
-        h = 480
-        self.screen = pygame.display.set_mode((w, h))
-        pygame.display.set_caption("Gridworld")
-
-    def fill_board(self):
-        self.screen.fill(self.WHITE)
-        for x in range(self.observation_space[0]):
-            for y in range(self.observation_space[1]):
-                image = pygame.Surface([self.TILE_SIZE, self.TILE_SIZE])
-                image.fill(self.WHITE)
-                rect = pygame.Rect(0, 0, self.TILE_SIZE, self.TILE_SIZE)
-                pygame.draw.rect(image, env.BLACK, rect, 1)
-                self.screen.blit(image, (x * self.TILE_SIZE, y * self.TILE_SIZE))
-
-        rect = pygame.Rect(self.reward_position[0] * self.TILE_SIZE , self.reward_position[1] * self.TILE_SIZE, self.TILE_SIZE, self.TILE_SIZE)
-        pygame.draw.rect(self.screen, self.BLUE, rect)
-
-  
-    def render(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-        self.fill_board()
-
-        # update square
-        rect = pygame.Rect(self.agent_position[0], self.agent_position[1] * self.TILE_SIZE, self.TILE_SIZE, self.TILE_SIZE)
-        pygame.draw.rect(self.screen, self.RED, rect)
-
-        # write debugging info
-        font = pygame.font.SysFont(None, 24)
-        pos = font.render(f"pos {self.agent_position}", True, self.BLACK)
-        self.screen.blit(pos, (400, 100))
-        
-        pygame.display.update()
-
-    
+     
 class QLearn:
-    alpha = 0.2 # learning rate
-    gamma = 0.95 # discount factor
 
-    def __init__(self, observation_space, action_space):
+    def __init__(self, observation_space, action_space, alpha, gamma):
+        self.alpha = alpha
+        self.gamma = gamma
         self.Q = np.zeros([observation_space[0]] + [observation_space[1]] + [action_space.shape[0]])
 
     def learn(self, action, state, reward, new_state):
@@ -142,15 +96,23 @@ class QLearn:
     def policy(self, state):
         return np.argmax(self.Q[state[0], state[1]])
 
-env = Gridworld(2, 3)
-model = QLearn(env.observation_space, env.action_space)
-print(model.Q.shape)
+
+
+alpha = 0.01 # learning rate
+gamma = 0.90 # discount factor
+epsilon = 0.2 # Exploration rate
+
+env = Gridworld(5, 5)
+model = QLearn(env.observation_space, env.action_space, alpha, gamma)
 
 observation = env.reset()
-epsilon = 0.1 # Exploration rate
 
-for i in range(100):
-    observation = env.reset()
+episodes = 10000
+for i in range(episodes):
+    observation = env.reset(True)
+
+    if i % int(episodes/10) == 0:
+        print(i)
 
     while True:
         # env.render()
@@ -169,40 +131,79 @@ for i in range(100):
             break
 
 
+# =============================================================================
+# Pygame 
+# =============================================================================
+
+# Constants 
+WHITE = (255, 255, 255)
+BLACK = (0,0,0)
+RED = (200,0,0)
+BLUE = (0, 0, 255)
+GREEN = (0, 255, 0)
+PURPLE = (255, 0, 255)
+BROWN  = (0, 255, 255)
+
+WIDTH = 640
+HEIGHT = 480
+TILE_SIZE = 60
+
+def update_pos(screen, pos):
+    # update square
+    rect = pygame.Rect(pos[0] * TILE_SIZE, pos[1] * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+    pygame.draw.rect(screen, RED, rect)
+
+    # write debugging info
+    font = pygame.font.SysFont("None", 24)
+    text_pos = font.render(f"pos {pos}", True, BLACK)
+    screen.blit(text_pos, (WIDTH - 2 * TILE_SIZE, TILE_SIZE))
+
+    pygame.display.update()
+
+def draw_grid(screen, q_table):
+    screen.fill(WHITE)
+    for x in range(env.observation_space[0]):
+        for y in range(env.observation_space[1]):
+            cell = pygame.Surface([TILE_SIZE, TILE_SIZE])
+            cell.fill(WHITE)
+            rect = pygame.Rect(0, 0, TILE_SIZE, TILE_SIZE)
+            pygame.draw.rect(cell, BLACK, rect, 1)
+
+            # Draw and orient arrow
+            pygame.draw.polygon(cell, BLACK, ((0, 10), (0, 20), (20, 20), (20, 30), (30, 15), (20, 0), (20, 10)))
+            oriented_cell = pygame.transform.rotate(cell, float(np.argmax(q_table[x, y])) * -90 + 180)
+            screen.blit(oriented_cell, (x * TILE_SIZE, y * TILE_SIZE))
+
+    # Draw termination state (goal)
+    rect = pygame.Rect(env.reward_position[0] * TILE_SIZE , env.reward_position[1] * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+    pygame.draw.rect(screen, BLUE, rect)
+
+
+# setup
+pygame.init()
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Gridworld")
 
 for i in range(100):
-    observation = env.reset()
+    observation = env.reset(True)
+
     while True:
+        # Visuals
+        pygame.time.delay(100)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
 
-        env.screen.fill(env.WHITE)
-        for x in range(env.observation_space[0]):
-            for y in range(env.observation_space[1]):
-                image = pygame.Surface([env.TILE_SIZE, env.TILE_SIZE])
-                image.fill(env.WHITE)
-                rect = pygame.Rect(0, 0, env.TILE_SIZE, env.TILE_SIZE)
-                pygame.draw.rect(image, env.BLACK, rect, 1)
+        draw_grid(screen, model.Q)
+        update_pos(screen, observation)
 
-                pygame.draw.polygon(image, env.BLACK, ((0, 10), (0, 20), (20, 20), (20, 30), (30, 15), (20, 0), (20, 10)))
-                pygame.transform.rotate(image, float(model.policy(observation) * 90))
-
-                env.screen.blit(image, (x * env.TILE_SIZE, y * env.TILE_SIZE))
-
-        rect = pygame.Rect(env.reward_position[0] * env.TILE_SIZE , env.reward_position[1] * env.TILE_SIZE, env.TILE_SIZE, env.TILE_SIZE)
-        pygame.draw.rect(env.screen, env.BLUE, rect)
-
+        # Actual model
         action = model.policy(observation)
-
-        old_observation = observation.copy()
         observation, reward, terminated, truncated = env.step(action)
 
-        model.learn(action, old_observation, reward, observation)
-
-        pygame.time.delay(100)
         if terminated or truncated:
             break
+
 
 print(model.Q)
 pygame.quit()
