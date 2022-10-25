@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 START_POP = 10 # Beginning population size
-MUT = 0.2 # Chance for mutation
+MUT = 0.1 # Chance for mutation
 TERMINATION_STATE = 0
 
 # Helper function converting from array of bits into decimal
@@ -24,19 +24,24 @@ def fitness(x, target):
 # and the second half from the other
 def combine(i1, i2):
     # Combine parents
-    half = len(i1) // 2 # Integer division 
-    child = np.concatenate((i1[:half], i2[half:]))
-  
-    # Add a random mutation
+    # half = len(i1) // 2 # Integer division 
+    # child = np.concatenate((i1[:half], i2[half:]))
+    
+    child = np.empty_like(i1)
     for i in range(len(child)):
-        if child[i] > 1 or child[i] < 0:
-            print(child)
-        # TODO: Consider non-deprecated randomness function
         rand = np.random.uniform(0, 1)
+        # temp_mut = MUT + (i/5 * MUT)
+        # Mutation
         if rand < MUT / 2:
             child[i] = 0
         elif rand > 1.0 - (MUT / 2):
             child[i] = 1
+
+        Combination
+        elif rand < 0.5:
+            child[i] = i1[i]
+        else:
+            child[i] = i2[i]
 
     return child
 
@@ -52,8 +57,8 @@ def select(population, target):
     # growth = np.random.randint(-3, 7) # Add some varition to pop size
     new_population = np.zeros_like(population)
     for i in range(2, len(population), 2):
+        new_population[i - 2] = combine(sort_pop[i - 2], sort_pop[i - 1])
         new_population[i - 1] = combine(sort_pop[i - 2], sort_pop[i])
-        new_population[i] = combine(sort_pop[i - 1], sort_pop[i])
 
     # print(f"new population: {new_population[4]}")
     return new_population 
@@ -99,10 +104,10 @@ print("gen\tsize\tbits\ttarget\tmax\tavg")
 for num_bits in bit_sizes:
     # Do three runs
     total_generations = 0
-    for _ in range(3):
+    for _ in range(10):
         final_generation = run(num_bits)
         total_generations += final_generation
-    results[num_bits] = total_generations // 3
+    results[num_bits] = total_generations // 10
 
 print("\nResults:")
 for key in results:

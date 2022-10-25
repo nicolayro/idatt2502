@@ -86,6 +86,9 @@ class QLearn:
         self.alpha = alpha
         self.gamma = gamma
         self.Q = np.zeros([observation_space[0]] + [observation_space[1]] + [action_space.shape[0]])
+        print(self.Q)
+        self.Q = np.random.random(size=([observation_space[0]] + [observation_space[1]] + [action_space.shape[0]]))
+        print(self.Q)
 
     def learn(self, action, state, reward, new_state):
         self.Q[state[0], state[1]][action] = self.bellmann(action, state, reward, new_state)
@@ -98,8 +101,8 @@ class QLearn:
 
 
 
-alpha = 0.01 # learning rate
-gamma = 0.90 # discount factor
+alpha = 0.05 # learning rate
+gamma = 0.95 # discount factor
 epsilon = 0.2 # Exploration rate
 
 env = Gridworld(5, 5)
@@ -107,7 +110,7 @@ model = QLearn(env.observation_space, env.action_space, alpha, gamma)
 
 observation = env.reset()
 
-episodes = 10000
+episodes = 100000
 for i in range(episodes):
     observation = env.reset(True)
 
@@ -184,7 +187,7 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Gridworld")
 
-for i in range(100):
+for i in range(20):
     observation = env.reset(True)
 
     while True:

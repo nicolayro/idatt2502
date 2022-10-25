@@ -44,7 +44,6 @@ class QLearn:
     def learn(self, action, state, reward, new_state):
         state = self.quantize(state)
         new_state = self.quantize(new_state)
-        print(f"state: {state}")
         self.Q[state][action] = self.bellmann(action, state, reward, new_state)
 
 
@@ -73,9 +72,9 @@ print("\nPROCESSING:")
 num_buckets = 20
 buckets = [
      	np.linspace(-4.8, 4.8, num_buckets),
-		np.linspace(-4, 4,num_buckets),
+		np.linspace(-5, 5,num_buckets),
  		np.linspace(-.418, .418, num_buckets),
-        np.linspace(-4, 4, num_buckets)
+        np.linspace(-5, 5, num_buckets)
 	]
 model = QLearn(env.observation_space, env.action_space, buckets)
 
