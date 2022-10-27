@@ -37,7 +37,7 @@ def combine(i1, i2):
         elif rand > 1.0 - (MUT / 2):
             child[i] = 1
 
-        Combination
+        # Combination
         elif rand < 0.5:
             child[i] = i1[i]
         else:
